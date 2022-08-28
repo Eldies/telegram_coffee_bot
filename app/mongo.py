@@ -12,3 +12,7 @@ def get_mongo_db():
         __mongo_client = MongoClient(settings.MONGODB_CONNECTION_STRING)
 
     return __mongo_client[settings.MONGODB_DB_NAME]
+
+
+def get_users_collection():
+    return get_mongo_db()['users']

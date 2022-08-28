@@ -3,8 +3,6 @@ import logging
 
 from telegram.ext import (
     CommandHandler,
-    Filters,
-    MessageHandler,
     Updater,
 )
 
@@ -25,9 +23,6 @@ def main() -> None:
     dispatcher = updater.dispatcher
 
     dispatcher.add_handler(CommandHandler("start", commands.start))
-    dispatcher.add_handler(CommandHandler("help", commands.help_command))
-
-    dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, commands.echo))
 
     updater.start_polling()
     updater.idle()
