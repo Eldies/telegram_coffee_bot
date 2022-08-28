@@ -22,7 +22,7 @@ def main() -> None:
 
     dispatcher = updater.dispatcher
 
-    dispatcher.add_handler(CommandHandler("start", commands.start))
+    dispatcher.add_handler(commands.make_conversation_handler())
 
     updater.start_polling()
     updater.idle()
