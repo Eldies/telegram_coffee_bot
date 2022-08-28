@@ -1,0 +1,5 @@
+  image_storage:
+    build: https://github.com/Eldies/telegram_coffee_bot.git
+    restart: always
+    environment:
+      BOT_TOKEN: TOKEN

@@ -1,0 +1,7 @@
+.git
+.gitignore
+.dockerignore
+venv
+Dockerfile
+coverage_html_report
+.idea
