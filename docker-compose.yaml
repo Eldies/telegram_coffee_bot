@@ -3,3 +3,5 @@
     restart: always
     environment:
       BOT_TOKEN: TOKEN
+      MONGODB_DB_NAME: coffee_bot
+      MONGODB_CONNECTION_STRING: mongodb://localhost:27017
