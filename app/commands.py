@@ -51,6 +51,7 @@ def start(update: Update, context: CallbackContext) -> ConversationStatus:
         'Я постараюсь найти группу людей, с которыми Вам удобно встретиться.'
         'Введите /delete если передумаете.\n\n'
         'В каком городе Вы находитесь?'.format(user.name),
+        reply_markup=ReplyKeyboardRemove(),
     )
 
     return ConversationStatus.city
@@ -78,6 +79,7 @@ def city(update: Update, context: CallbackContext) -> ConversationStatus | int:
         update.message.reply_text(
             'К сожалению я не могу понять что это за город такой - "{}".\n'
             'Попробуйте ввести город еще раз'.format(update.message.text),
+            reply_markup=ReplyKeyboardRemove(),
         )
         return ConversationStatus.city
 
@@ -85,6 +87,7 @@ def city(update: Update, context: CallbackContext) -> ConversationStatus | int:
         update.message.reply_text(
             'Вы находитесь в "{}"? Это не похоже на город.\n'
             'Попробуйте ввести город еще раз'.format(city_data['results'][0]['formatted_address']),
+            reply_markup=ReplyKeyboardRemove(),
         )
         return ConversationStatus.city
 
