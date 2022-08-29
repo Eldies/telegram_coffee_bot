@@ -38,7 +38,10 @@ def start(update: Update, context: CallbackContext) -> ConversationStatus:
     collection = get_users_collection()
     item = collection.find_one(dict(_id=user.id))
     if item is None:
-        collection.insert_one(dict(_id=user.id))
+        collection.insert_one(dict(
+            _id=user.id,
+            name=user.name,
+        ))
 
     update.message.reply_text(
         'Привет, {}!\n'
