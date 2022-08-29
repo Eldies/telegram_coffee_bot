@@ -1,6 +1,13 @@
 # -*- coding: utf-8 -*-
+from datetime import (
+    date,
+    datetime,
+    timedelta,
+)
 from enum import Enum
 import logging
+import pytz
+import re
 
 from telegram import (
     ReplyKeyboardMarkup,
@@ -29,10 +36,53 @@ logger = logging.getLogger(__name__)
 class ConversationStatus(Enum):
     city = 1
     city_confirm = 2
+    days = 3
 
 
 YES = 'Да'
 NO = 'Нет'
+
+DAY_OF_WEEK = [
+    'Понедельник',
+    'Вторник',
+    'Среда',
+    'Четверг',
+    'Пятница',
+    'Суббота',
+    'Воскресенье',
+]
+FINISH_DATE_CHOOSING = 'Закончить выбор дат'
+
+
+def make_keyboard_for_dates(update: Update) -> ReplyKeyboardMarkup:
+    collection = get_users_collection()
+    item = collection.find_one(dict(_id=update.effective_user.id))
+    dates_from_db = set(map(lambda d: date.fromisoformat(d), item.get('dates', [])))
+
+    nearest_dates = [
+        (datetime.now(tz=pytz.timezone(item['timezone'])) + timedelta(days=shift)).date()
+        for shift in range(1, 9)
+    ]
+
+    dates_strings = [
+        '{is_chosen} {date} ({weekday})'.format(
+            is_chosen='☑' if d in dates_from_db else '☐',
+            date=d.isoformat(),
+            weekday=DAY_OF_WEEK[d.weekday()],
+        )
+        for d in sorted(dates_from_db | set(nearest_dates))
+    ]
+    buttons = [
+        dates_strings[i:i + 2]
+        for i in range(0, len(dates_strings), 2)
+    ] + [
+        [FINISH_DATE_CHOOSING]
+    ]
+
+    return ReplyKeyboardMarkup(
+        buttons,
+        resize_keyboard=True,
+    )
 
 
 def start(update: Update, context: CallbackContext) -> ConversationStatus:
@@ -142,10 +192,10 @@ def city_confirm(update: Update, context: CallbackContext) -> ConversationStatus
     if update.message.text == YES:
         logger.info("User {} (id: {}) confirmed the city.".format(user.name, user.id))
         update.message.reply_text(
-            'Я сообщу Вам если смогу подобрать подходящую компанию',
-            reply_markup=ReplyKeyboardRemove(),
+            'Отметьте даты, когда Вам удобно встречаться с людьми. Или просто напишите дату в формате год-месяц-число',
+            reply_markup=make_keyboard_for_dates(update),
         )
-        return ConversationHandler.END
+        return ConversationStatus.days
     elif update.message.text == NO:
         logger.info("User {} (id: {}) did not confirm the city. Asking for city again.".format(user.name, user.id))
         update.message.reply_text(
@@ -154,6 +204,45 @@ def city_confirm(update: Update, context: CallbackContext) -> ConversationStatus
         )
         return ConversationStatus.city
     return ConversationStatus.city_confirm
+
+
+def days(update: Update, context: CallbackContext) -> ConversationStatus | int:
+    if update.message.text == FINISH_DATE_CHOOSING:
+        update.message.reply_text(
+            'Я сообщу Вам если смогу подобрать подходящую компанию',
+            reply_markup=ReplyKeyboardRemove(),
+        )
+        return ConversationHandler.END
+
+    match = re.search('(\d{4})-(\d{1,2})-(\d{1,2})', update.message.text)
+    if match is None:
+        update.message.reply_text(
+            'Не могу разобрать дату',
+            reply_markup=make_keyboard_for_dates(update),
+        )
+        return ConversationStatus.days
+
+    date_string = date(year=int(match.group(1)), month=int(match.group(2)), day=int(match.group(3))).isoformat()
+
+    collection = get_users_collection()
+    item = collection.find_one(dict(_id=update.effective_user.id))
+    dates_from_db = set(item.get('dates', []))
+    new_dates = dates_from_db ^ {date_string}
+
+    collection.update_one(
+        filter=dict(_id=update.effective_user.id),
+        update={'$set': dict(
+            dates=sorted(new_dates),
+        )}
+    )
+    update.message.reply_text(
+        'Записал, что Вы {}готовы встретиться {}'.format(
+            '' if date_string in new_dates else 'не ',
+            date_string,
+        ),
+        reply_markup=make_keyboard_for_dates(update),
+    )
+    return ConversationStatus.days
 
 
 def delete(update: Update, context: CallbackContext) -> ConversationStatus | int:
@@ -174,6 +263,7 @@ def make_conversation_handler() -> ConversationHandler:
         states={
             ConversationStatus.city: [MessageHandler(Filters.text & ~Filters.command, city)],
             ConversationStatus.city_confirm: [MessageHandler(Filters.text & ~Filters.command, city_confirm)],
+            ConversationStatus.days: [MessageHandler(Filters.text & ~Filters.command, days)],
         },
         fallbacks=[CommandHandler('delete', delete)],
     )
