@@ -70,8 +70,15 @@ def city(update: Update, context: CallbackContext) -> ConversationStatus | int:
 
     if len(city_data['results']) == 0:
         update.message.reply_text(
-            'К сожалению я не могу понять что это за город такой - "{}". '
+            'К сожалению я не могу понять что это за город такой - "{}".\n'
             'Попробуйте ввести город еще раз'.format(update.message.text),
+        )
+        return ConversationStatus.city
+
+    if 'locality' not in city_data['results'][0]['types']:
+        update.message.reply_text(
+            'Вы находитесь в "{}"? Это не похоже на город.\n'
+            'Попробуйте ввести город еще раз'.format(city_data['results'][0]['formatted_address']),
         )
         return ConversationStatus.city
 
