@@ -91,6 +91,7 @@ def city(update: Update, context: CallbackContext) -> ConversationStatus | int:
         'Верно ли я понял, что вы находитесь в "{}"?'.format(normalized_city),
         reply_markup=ReplyKeyboardMarkup(
             [[YES, NO]],
+            resize_keyboard=True,
             one_time_keyboard=True,
         ),
     )
