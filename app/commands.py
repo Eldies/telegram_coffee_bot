@@ -42,7 +42,7 @@ def start(update: Update, context: CallbackContext) -> ConversationStatus:
     update.message.reply_text(
         'Привет, {}!\n'
         'Я постараюсь найти группу людей, с которыми Вам удобно встретиться.'
-        'Введите /cancel если передумаете.\n\n'
+        'Введите /delete если передумаете.\n\n'
         'В каком городе Вы находитесь?'.format(user.name),
     )
 
@@ -63,7 +63,7 @@ def city(update: Update, context: CallbackContext) -> ConversationStatus:
             'К сожалению я не могу понять что это за город такой - "{}". '
             'Попробуйте ввести город еще раз'.format(update.message.text),
         )
-        return ConversationStatus.city_confirm
+        return ConversationStatus.city
 
     normalized_city = city_data['results'][0]['formatted_address']
     logger.info("User {} (id: {}) normalized city: \"{}\".".format(
@@ -107,9 +107,9 @@ def city_confirm(update: Update, context: CallbackContext) -> ConversationStatus
     return ConversationStatus.city_confirm
 
 
-def cancel(update: Update, context: CallbackContext) -> ConversationStatus:
+def delete(update: Update, context: CallbackContext) -> ConversationStatus:
     user = update.effective_user
-    logger.info("User {} (id: {}) cancelled.".format(user.name, user.id))
+    logger.info("User {} (id: {}) decided to delete their data.".format(user.name, user.id))
     collection = get_users_collection()
     collection.delete_one(filter=dict(_id=user.id))
     update.message.reply_text(
@@ -126,5 +126,5 @@ def make_conversation_handler():
             ConversationStatus.city: [MessageHandler(Filters.text & ~Filters.command, city)],
             ConversationStatus.city_confirm: [MessageHandler(Filters.text & ~Filters.command, city_confirm)],
         },
-        fallbacks=[CommandHandler('cancel', cancel)],
+        fallbacks=[CommandHandler('delete', delete)],
     )
