@@ -16,7 +16,10 @@ from telegram.ext import (
 )
 
 from .exceptions import GoogleApiError
-from .google_maps import get_city_data
+from .google_maps import (
+    get_city_data,
+    get_timezone_for_location,
+)
 from .mongo import get_users_collection
 
 
@@ -91,9 +94,31 @@ def city(update: Update, context: CallbackContext) -> ConversationStatus | int:
         user.id,
         normalized_city,
     ))
+
+    try:
+        timezone = get_timezone_for_location(
+            latitude=city_data['results'][0]['geometry']['location']['lat'],
+            longitude=city_data['results'][0]['geometry']['location']['lng'],
+        )
+    except GoogleApiError as e:
+        logger.error(msg="Exception while handling an update:", exc_info=e)
+        update.message.reply_text(
+            'К сожалению, я сломался',
+            reply_markup=ReplyKeyboardRemove(),
+        )
+        return ConversationHandler.END
+
+    logger.info("User {} (id: {}) timezone: \"{}\".".format(
+        user.name,
+        user.id,
+        timezone,
+    ))
     result = collection.update_one(
         filter=dict(_id=user.id),
-        update={'$set': dict(city=normalized_city)}
+        update={'$set': dict(
+            city=normalized_city,
+            timezone=timezone,
+        )}
     )
     assert result.matched_count == 1
 

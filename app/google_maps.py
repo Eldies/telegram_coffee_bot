@@ -19,3 +19,19 @@ def get_city_data(city: str) -> dict:
         raise GoogleApiError(result.get('error_message', 'no error message'))
 
     return result
+
+
+def get_timezone_for_location(latitude: int, longitude: int) -> str:
+    response = requests.get(
+        url='https://maps.googleapis.com/maps/api/timezone/json',
+        params=dict(
+            key=settings.GOOGLE_MAPS_API_KEY,
+            location='{},{}'.format(latitude, longitude),
+            timestamp=0,
+        ),
+    )
+    result = response.json()
+    if result['status'] not in ('OK', 'ZERO_RESULTS'):
+        raise GoogleApiError(result.get('error_message', 'no error message'))
+
+    return result['timeZoneId']
