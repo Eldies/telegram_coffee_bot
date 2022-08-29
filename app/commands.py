@@ -15,8 +15,9 @@ from telegram.ext import (
     MessageHandler,
 )
 
-from .mongo import get_users_collection
+from .exceptions import GoogleApiError
 from .google_maps import get_city_data
+from .mongo import get_users_collection
 
 
 logger = logging.getLogger(__name__)
@@ -49,7 +50,7 @@ def start(update: Update, context: CallbackContext) -> ConversationStatus:
     return ConversationStatus.city
 
 
-def city(update: Update, context: CallbackContext) -> ConversationStatus:
+def city(update: Update, context: CallbackContext) -> ConversationStatus | int:
     user = update.effective_user
     logger.info("User {} (id: {}) inputed \"{}\" as their city.".format(
         user.name,
@@ -57,7 +58,16 @@ def city(update: Update, context: CallbackContext) -> ConversationStatus:
         update.message.text,
     ))
     collection = get_users_collection()
-    city_data = get_city_data(update.message.text)
+    try:
+        city_data = get_city_data(update.message.text)
+    except GoogleApiError as e:
+        logger.error(msg="Exception while handling an update:", exc_info=e)
+        update.message.reply_text(
+            'К сожалению, я сломался',
+            reply_markup=ReplyKeyboardRemove(),
+        )
+        return ConversationHandler.END
+
     if len(city_data['results']) == 0:
         update.message.reply_text(
             'К сожалению я не могу понять что это за город такой - "{}". '
@@ -88,7 +98,7 @@ def city(update: Update, context: CallbackContext) -> ConversationStatus:
     return ConversationStatus.city_confirm
 
 
-def city_confirm(update: Update, context: CallbackContext) -> ConversationStatus:
+def city_confirm(update: Update, context: CallbackContext) -> ConversationStatus | int:
     user = update.effective_user
     if update.message.text == YES:
         logger.info("User {} (id: {}) confirmed the city.".format(user.name, user.id))
@@ -107,7 +117,7 @@ def city_confirm(update: Update, context: CallbackContext) -> ConversationStatus
     return ConversationStatus.city_confirm
 
 
-def delete(update: Update, context: CallbackContext) -> ConversationStatus:
+def delete(update: Update, context: CallbackContext) -> ConversationStatus | int:
     user = update.effective_user
     logger.info("User {} (id: {}) decided to delete their data.".format(user.name, user.id))
     collection = get_users_collection()
@@ -119,7 +129,7 @@ def delete(update: Update, context: CallbackContext) -> ConversationStatus:
     return ConversationHandler.END
 
 
-def make_conversation_handler():
+def make_conversation_handler() -> ConversationHandler:
     return ConversationHandler(
         entry_points=[CommandHandler('start', start)],
         states={
