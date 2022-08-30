@@ -210,7 +210,7 @@ def city_confirm(update: Update, context: CallbackContext) -> ConversationStatus
 def days(update: Update, context: CallbackContext) -> ConversationStatus | int:
     if update.message.text == FINISH_DATE_CHOOSING:
         update.message.reply_text(
-            'Я сообщу Вам если смогу подобрать подходящую компанию',
+            'Я сообщу Вам если смогу подобрать подходящую компанию, накануне встречи',
             reply_markup=ReplyKeyboardRemove(),
         )
         return ConversationHandler.END
@@ -238,7 +238,7 @@ def days(update: Update, context: CallbackContext) -> ConversationStatus | int:
     )
     update.message.reply_text(
         'Записал, что Вы {}готовы встретиться {}'.format(
-            '' if date_string in new_dates else 'не ',
+            '' if date_string in new_dates else 'НЕ ',
             date_string,
         ),
         reply_markup=make_keyboard_for_dates(update),
