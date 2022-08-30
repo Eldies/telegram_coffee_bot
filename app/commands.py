@@ -263,7 +263,7 @@ def cancel(update: Update, _: CallbackContext) -> ConversationStatus | int:
         update={'$set': dict(
             city=None,
             timezone=None,
-            days=[],
+            dates=[],
         )}
     )
     update.message.reply_text(
