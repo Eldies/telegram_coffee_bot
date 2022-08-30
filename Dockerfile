@@ -15,4 +15,4 @@ COPY ./tests tests
 FROM branch-env-${VERSION} as final
 COPY ./app app
 
-CMD python app/__init__.py
+CMD python -m app

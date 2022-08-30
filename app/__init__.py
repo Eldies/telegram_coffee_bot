@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 import logging
 
 from telegram.ext import (
@@ -31,7 +31,3 @@ def main() -> None:
 
     updater.start_polling()
     updater.idle()
-
-
-if __name__ == '__main__':
-    main()
