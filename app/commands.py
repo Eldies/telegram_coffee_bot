@@ -86,21 +86,29 @@ def make_keyboard_for_dates(update: Update) -> ReplyKeyboardMarkup:
     )
 
 
+def track_chats(update: Update, context: CallbackContext) -> None:
+    user = update.effective_user
+    event = update.my_chat_member
+    if event.chat.type == event.chat.PRIVATE:
+        if event.new_chat_member.status == event.new_chat_member.MEMBER:
+            logger.info("User {} (id: {}) started bot.".format(user.name, user.id))
+            get_users_collection().insert_one(dict(
+                _id=user.id,
+                name=user.name,
+            ))
+        else:
+            logger.info("User {} (id: {}) stopped bot.".format(user.name, user.id))
+            get_users_collection().delete_one(filter=dict(_id=user.id))
+
+
 def start(update: Update, context: CallbackContext) -> ConversationStatus:
     user = update.effective_user
     logger.info("User {} (id: {}) started conversation.".format(user.name, user.id))
-    collection = get_users_collection()
-    item = collection.find_one(dict(_id=user.id))
-    if item is None:
-        collection.insert_one(dict(
-            _id=user.id,
-            name=user.name,
-        ))
 
     update.message.reply_text(
         'Привет, {}!\n'
         'Я постараюсь найти группу людей, с которыми Вам удобно встретиться.'
-        'Введите /delete если передумаете.\n\n'
+        'Введите /cancel если передумаете.\n\n'
         'В каком городе Вы находитесь?'.format(user.name),
         reply_markup=ReplyKeyboardRemove(),
     )
@@ -110,7 +118,7 @@ def start(update: Update, context: CallbackContext) -> ConversationStatus:
 
 def city(update: Update, context: CallbackContext) -> ConversationStatus | int:
     user = update.effective_user
-    logger.info("User {} (id: {}) inputed \"{}\" as their city.".format(
+    logger.info("User {} (id: {}) inputted \"{}\" as their city.".format(
         user.name,
         user.id,
         update.message.text,
@@ -215,7 +223,7 @@ def days(update: Update, context: CallbackContext) -> ConversationStatus | int:
         )
         return ConversationHandler.END
 
-    match = re.search('(\d{4})-(\d{1,2})-(\d{1,2})', update.message.text)
+    match = re.search(r'(\d{4})-(\d{1,2})-(\d{1,2})', update.message.text)
     if match is None:
         update.message.reply_text(
             'Не могу разобрать дату',
@@ -246,11 +254,18 @@ def days(update: Update, context: CallbackContext) -> ConversationStatus | int:
     return ConversationStatus.days
 
 
-def delete(update: Update, context: CallbackContext) -> ConversationStatus | int:
+def cancel(update: Update, context: CallbackContext) -> ConversationStatus | int:
     user = update.effective_user
-    logger.info("User {} (id: {}) decided to delete their data.".format(user.name, user.id))
+    logger.info("User {} (id: {}) cancelled conversation.".format(user.name, user.id))
     collection = get_users_collection()
-    collection.delete_one(filter=dict(_id=user.id))
+    collection.update_one(
+        filter=dict(_id=user.id),
+        update={'$set': dict(
+            city=None,
+            timezone=None,
+            days=[],
+        )}
+    )
     update.message.reply_text(
         'Я забыл все что вы мне сообщали. Если все же решите найти собеседников напишите /start',
         reply_markup=ReplyKeyboardRemove(),
@@ -266,7 +281,7 @@ def make_conversation_handler() -> ConversationHandler:
             ConversationStatus.city_confirm: [MessageHandler(Filters.text & ~Filters.command, city_confirm)],
             ConversationStatus.days: [MessageHandler(Filters.text & ~Filters.command, days)],
         },
-        fallbacks=[CommandHandler('delete', delete)],
+        fallbacks=[CommandHandler('cancel', cancel)],
     )
 
 
@@ -275,12 +290,14 @@ def try_to_group_people(context: CallbackContext):
 
     city_to_users = defaultdict(list)
     for user in collection.find({}):
+        if not user.get('city'):
+            continue
         city_to_users[user['city']].append(user)
 
     for city in city_to_users:
         users = city_to_users[city]
         tomorrow = (datetime.now(tz=pytz.timezone(users[0]['timezone'])) + timedelta(days=1)).date().isoformat()
-        users = [user for user in users if tomorrow in user['dates']]
+        users = [user for user in users if tomorrow in user.get('dates', [])]
         for user in users:
             context.bot.send_message(
                 chat_id=user['_id'],

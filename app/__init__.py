@@ -2,6 +2,7 @@
 import logging
 
 from telegram.ext import (
+    ChatMemberHandler,
     CommandHandler,
     Updater,
 )
@@ -21,13 +22,14 @@ def main() -> None:
     updater = Updater(settings.BOT_TOKEN)
     updater.bot.set_my_commands([
         ('/start', 'запускает бот'),
-        ('/delete', 'удаляет все данные, которые вы ранее сообщали боту'),
+        ('/cancel', 'удаляет все данные, которые вы ранее сообщали боту'),
     ])
 
     dispatcher = updater.dispatcher
 
     dispatcher.add_handler(commands.make_conversation_handler())
-    dispatcher.add_handler(CommandHandler('delete', commands.delete))
+    dispatcher.add_handler(CommandHandler('cancel', commands.cancel))
+    dispatcher.add_handler(ChatMemberHandler(commands.track_chats, ChatMemberHandler.MY_CHAT_MEMBER))
 
     updater.job_queue.run_repeating(commands.try_to_group_people, interval=600, first=10)
 
