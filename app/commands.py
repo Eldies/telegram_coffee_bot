@@ -86,7 +86,7 @@ def make_keyboard_for_dates(update: Update) -> ReplyKeyboardMarkup:
     )
 
 
-def track_chats(update: Update, context: CallbackContext) -> None:
+def track_chats(update: Update, _: CallbackContext) -> None:
     user = update.effective_user
     event = update.my_chat_member
     if event.chat.type == event.chat.PRIVATE:
@@ -101,7 +101,7 @@ def track_chats(update: Update, context: CallbackContext) -> None:
             get_users_collection().delete_one(filter=dict(_id=user.id))
 
 
-def start(update: Update, context: CallbackContext) -> ConversationStatus:
+def start(update: Update, _: CallbackContext) -> ConversationStatus:
     user = update.effective_user
     logger.info("User {} (id: {}) started conversation.".format(user.name, user.id))
 
@@ -116,7 +116,7 @@ def start(update: Update, context: CallbackContext) -> ConversationStatus:
     return ConversationStatus.city
 
 
-def city(update: Update, context: CallbackContext) -> ConversationStatus | int:
+def city(update: Update, _: CallbackContext) -> ConversationStatus | int:
     user = update.effective_user
     logger.info("User {} (id: {}) inputted \"{}\" as their city.".format(
         user.name,
@@ -196,7 +196,7 @@ def city(update: Update, context: CallbackContext) -> ConversationStatus | int:
     return ConversationStatus.city_confirm
 
 
-def city_confirm(update: Update, context: CallbackContext) -> ConversationStatus | int:
+def city_confirm(update: Update, _: CallbackContext) -> ConversationStatus | int:
     user = update.effective_user
     if update.message.text == YES:
         logger.info("User {} (id: {}) confirmed the city.".format(user.name, user.id))
@@ -215,7 +215,7 @@ def city_confirm(update: Update, context: CallbackContext) -> ConversationStatus
     return ConversationStatus.city_confirm
 
 
-def days(update: Update, context: CallbackContext) -> ConversationStatus | int:
+def days(update: Update, _: CallbackContext) -> ConversationStatus | int:
     if update.message.text == FINISH_DATE_CHOOSING:
         update.message.reply_text(
             'Я сообщу Вам если смогу подобрать подходящую компанию, накануне встречи',
@@ -254,7 +254,7 @@ def days(update: Update, context: CallbackContext) -> ConversationStatus | int:
     return ConversationStatus.days
 
 
-def cancel(update: Update, context: CallbackContext) -> ConversationStatus | int:
+def cancel(update: Update, _: CallbackContext) -> ConversationStatus | int:
     user = update.effective_user
     logger.info("User {} (id: {}) cancelled conversation.".format(user.name, user.id))
     collection = get_users_collection()
