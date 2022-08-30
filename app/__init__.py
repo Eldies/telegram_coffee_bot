@@ -29,5 +29,7 @@ def main() -> None:
     dispatcher.add_handler(commands.make_conversation_handler())
     dispatcher.add_handler(CommandHandler('delete', commands.delete))
 
+    updater.job_queue.run_repeating(commands.try_to_group_people, interval=600, first=10)
+
     updater.start_polling()
     updater.idle()
