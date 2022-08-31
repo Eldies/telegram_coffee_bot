@@ -86,17 +86,24 @@ def make_keyboard_for_dates(update: Update) -> ReplyKeyboardMarkup:
     )
 
 
+def ensure_user_exists(user):
+    collection = get_users_collection()
+    item = collection.find_one(dict(_id=user.id))
+    if item is None:
+        logger.info("User {} (id: {}) started bot.".format(user.name, user.id))
+        collection.insert_one(dict(
+            _id=user.id,
+            name=user.name,
+        ))
+
+
 def track_chats(update: Update, _: CallbackContext) -> None:
     user = update.effective_user
     event = update.my_chat_member
     logger.info('my_chat_member event from user {}/{} in chat {}'.format(user.name, user.id, event.chat.id))
     if event.chat.type == event.chat.PRIVATE:
         if event.new_chat_member.status == event.new_chat_member.MEMBER:
-            logger.info("User {} (id: {}) started bot.".format(user.name, user.id))
-            get_users_collection().insert_one(dict(
-                _id=user.id,
-                name=user.name,
-            ))
+            ensure_user_exists(user)
         else:
             logger.info("User {} (id: {}) stopped bot.".format(user.name, user.id))
             get_users_collection().delete_one(filter=dict(_id=user.id))
@@ -104,6 +111,7 @@ def track_chats(update: Update, _: CallbackContext) -> None:
 
 def start(update: Update, _: CallbackContext) -> ConversationStatus:
     user = update.effective_user
+    ensure_user_exists(user)
     logger.info("User {} (id: {}) started conversation.".format(user.name, user.id))
 
     update.message.reply_text(
