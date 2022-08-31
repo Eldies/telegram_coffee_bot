@@ -89,6 +89,7 @@ def make_keyboard_for_dates(update: Update) -> ReplyKeyboardMarkup:
 def track_chats(update: Update, _: CallbackContext) -> None:
     user = update.effective_user
     event = update.my_chat_member
+    logger.info('my_chat_member event from user {}/{} in chat {}'.format(user.name, user.id, event.chat.id))
     if event.chat.type == event.chat.PRIVATE:
         if event.new_chat_member.status == event.new_chat_member.MEMBER:
             logger.info("User {} (id: {}) started bot.".format(user.name, user.id))
