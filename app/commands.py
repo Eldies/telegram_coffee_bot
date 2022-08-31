@@ -157,7 +157,7 @@ def city_is_moscow(update: Update, _: CallbackContext) -> ConversationStatus | i
 
         logger.info('User {} (id: {}) confirmed the city is "{}".'.format(user.name, user.id, normalized_city))
         update.message.reply_text(
-            'Укажите удобные вам дни на следующей неделе:',
+            'Укажите удобные вам дни на следующей неделе (можно выбрать несколько дат):',
             reply_markup=make_keyboard_for_dates(update),
         )
         return ConversationStatus.days
@@ -255,7 +255,7 @@ def city_confirm(update: Update, _: CallbackContext) -> ConversationStatus | int
     if update.message.text == YES:
         logger.info("User {} (id: {}) confirmed the city.".format(user.name, user.id))
         update.message.reply_text(
-            'Укажите удобные вам дни на следующей неделе:',
+            'Укажите удобные вам дни на следующей неделе (можно выбрать несколько дат):',
             reply_markup=make_keyboard_for_dates(update),
         )
         return ConversationStatus.days
@@ -271,8 +271,10 @@ def city_confirm(update: Update, _: CallbackContext) -> ConversationStatus | int
 
 def days(update: Update, _: CallbackContext) -> ConversationStatus | int:
     collection = get_users_collection()
-    item = collection.find_one(dict(_id=update.effective_user.id))
+    user = update.effective_user
+    item = collection.find_one(dict(_id=user.id))
     if update.message.text == FINISH_DATE_CHOOSING:
+        logger.info("User {} (id: {}) is ready to .".format(user.name, user.id))
         update.message.reply_text(
             'Я сообщу Вам если смогу подобрать подходящую компанию, накануне встречи',
             reply_markup=ReplyKeyboardRemove(),
