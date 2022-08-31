@@ -56,15 +56,21 @@ DAY_OF_WEEK = [
 FINISH_DATE_CHOOSING = 'Закончить выбор дат'
 
 
+def get_next_week_dates(user):
+    today = datetime.now(tz=pytz.timezone(user['timezone'])).date()
+    next_monday = today + timedelta(days=7 - today.weekday())
+    return [
+        next_monday + timedelta(days=shift)
+        for shift in range(7)
+    ]
+
+
 def make_keyboard_for_dates(update: Update) -> ReplyKeyboardMarkup:
     collection = get_users_collection()
     item = collection.find_one(dict(_id=update.effective_user.id))
     dates_from_db = set(map(lambda d: date.fromisoformat(d), item.get('dates', [])))
 
-    nearest_dates = [
-        (datetime.now(tz=pytz.timezone(item['timezone'])) + timedelta(days=shift)).date()
-        for shift in range(1, 9)
-    ]
+    next_week_dates = get_next_week_dates(item)
 
     dates_strings = [
         '{is_chosen} {date} ({weekday})'.format(
@@ -72,7 +78,7 @@ def make_keyboard_for_dates(update: Update) -> ReplyKeyboardMarkup:
             date=d.isoformat(),
             weekday=DAY_OF_WEEK[d.weekday()],
         )
-        for d in sorted(dates_from_db | set(nearest_dates))
+        for d in next_week_dates
     ]
     buttons = [
         [FINISH_DATE_CHOOSING]
@@ -151,7 +157,7 @@ def city_is_moscow(update: Update, _: CallbackContext) -> ConversationStatus | i
 
         logger.info('User {} (id: {}) confirmed the city is "{}".'.format(user.name, user.id, normalized_city))
         update.message.reply_text(
-            'Отметьте даты, когда Вам удобно встречаться с людьми. Или просто напишите дату в формате год-месяц-число',
+            'Укажите удобные вам дни на следующей неделе:',
             reply_markup=make_keyboard_for_dates(update),
         )
         return ConversationStatus.days
@@ -249,7 +255,7 @@ def city_confirm(update: Update, _: CallbackContext) -> ConversationStatus | int
     if update.message.text == YES:
         logger.info("User {} (id: {}) confirmed the city.".format(user.name, user.id))
         update.message.reply_text(
-            'Отметьте даты, когда Вам удобно встречаться с людьми. Или просто напишите дату в формате год-месяц-число',
+            'Укажите удобные вам дни на следующей неделе:',
             reply_markup=make_keyboard_for_dates(update),
         )
         return ConversationStatus.days
@@ -264,6 +270,8 @@ def city_confirm(update: Update, _: CallbackContext) -> ConversationStatus | int
 
 
 def days(update: Update, _: CallbackContext) -> ConversationStatus | int:
+    collection = get_users_collection()
+    item = collection.find_one(dict(_id=update.effective_user.id))
     if update.message.text == FINISH_DATE_CHOOSING:
         update.message.reply_text(
             'Я сообщу Вам если смогу подобрать подходящую компанию, накануне встречи',
@@ -281,8 +289,13 @@ def days(update: Update, _: CallbackContext) -> ConversationStatus | int:
 
     date_string = date(year=int(match.group(1)), month=int(match.group(2)), day=int(match.group(3))).isoformat()
 
-    collection = get_users_collection()
-    item = collection.find_one(dict(_id=update.effective_user.id))
+    if date.fromisoformat(date_string) not in get_next_week_dates(item):
+        update.message.reply_text(
+            'Дата {} не на следующей неделе'.format(date_string),
+            reply_markup=make_keyboard_for_dates(update),
+        )
+        return ConversationStatus.days
+
     dates_from_db = set(item.get('dates', []))
     new_dates = dates_from_db ^ {date_string}
 
