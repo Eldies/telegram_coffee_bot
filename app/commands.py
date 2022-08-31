@@ -35,6 +35,7 @@ logger = logging.getLogger(__name__)
 
 
 class ConversationStatus(Enum):
+    city_is_moscow = 4
     city = 1
     city_confirm = 2
     days = 3
@@ -118,11 +119,56 @@ def start(update: Update, _: CallbackContext) -> ConversationStatus:
         'Привет, {}!\n'
         'Я постараюсь найти группу людей, с которыми Вам удобно встретиться.'
         'Введите /cancel если передумаете.\n\n'
-        'В каком городе Вы находитесь?'.format(user.name),
-        reply_markup=ReplyKeyboardRemove(),
+        'Вы находитесь в Москве?'.format(user.name),
+        reply_markup=ReplyKeyboardMarkup(
+            [[YES, NO]],
+            resize_keyboard=True,
+        ),
     )
 
-    return ConversationStatus.city
+    return ConversationStatus.city_is_moscow
+
+
+def city_is_moscow(update: Update, _: CallbackContext) -> ConversationStatus | int:
+    user = update.effective_user
+    collection = get_users_collection()
+    if update.message.text == YES:
+        try:
+            city_data = get_city_data('Москва')
+            timezone = get_timezone_for_location(
+                latitude=city_data['results'][0]['geometry']['location']['lat'],
+                longitude=city_data['results'][0]['geometry']['location']['lng'],
+            )
+        except GoogleApiError as e:
+            logger.error(msg="Exception while handling an update:", exc_info=e)
+            update.message.reply_text(
+                'К сожалению, я сломался',
+                reply_markup=ReplyKeyboardRemove(),
+            )
+            return ConversationHandler.END
+        normalized_city = city_data['results'][0]['formatted_address']
+        collection.update_one(
+            filter=dict(_id=user.id),
+            update={'$set': dict(
+                city=normalized_city,
+                timezone=timezone,
+            )}
+        )
+
+        logger.info('User {} (id: {}) confirmed the city is "{}".'.format(user.name, user.id, normalized_city))
+        update.message.reply_text(
+            'Отметьте даты, когда Вам удобно встречаться с людьми. Или просто напишите дату в формате год-месяц-число',
+            reply_markup=make_keyboard_for_dates(update),
+        )
+        return ConversationStatus.days
+    elif update.message.text == NO:
+        logger.info("User {} (id: {}) did not confirm the city is moscow. Asking for city again.".format(user.name, user.id))
+        update.message.reply_text(
+            'В каком городе Вы находитесь?',
+            reply_markup=ReplyKeyboardRemove(),
+        )
+        return ConversationStatus.city
+    return ConversationStatus.city_is_moscow
 
 
 def city(update: Update, _: CallbackContext) -> ConversationStatus | int:
@@ -198,7 +244,6 @@ def city(update: Update, _: CallbackContext) -> ConversationStatus | int:
         reply_markup=ReplyKeyboardMarkup(
             [[YES, NO]],
             resize_keyboard=True,
-            one_time_keyboard=True,
         ),
     )
 
@@ -286,6 +331,7 @@ def make_conversation_handler() -> ConversationHandler:
     return ConversationHandler(
         entry_points=[CommandHandler('start', start)],
         states={
+            ConversationStatus.city_is_moscow: [MessageHandler(Filters.text & ~Filters.command, city_is_moscow)],
             ConversationStatus.city: [MessageHandler(Filters.text & ~Filters.command, city)],
             ConversationStatus.city_confirm: [MessageHandler(Filters.text & ~Filters.command, city_confirm)],
             ConversationStatus.days: [MessageHandler(Filters.text & ~Filters.command, days)],
