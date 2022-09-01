@@ -156,11 +156,7 @@ def city_is_moscow(update: Update, _: CallbackContext) -> ConversationStatus | i
         )
 
         logger.info('User {} (id: {}) confirmed the city is "{}".'.format(user.name, user.id, normalized_city))
-        update.message.reply_text(
-            'Укажите удобные вам дни на следующей неделе (можно выбрать несколько дат):',
-            reply_markup=make_keyboard_for_dates(update),
-        )
-        return ConversationStatus.days
+        return ask_about_dates(update)
     elif update.message.text == NO:
         logger.info("User {} (id: {}) city is not moscow. Asking for city again.".format(user.name, user.id))
         update.message.reply_text(
@@ -250,15 +246,19 @@ def city(update: Update, _: CallbackContext) -> ConversationStatus | int:
     return ConversationStatus.city_confirm
 
 
+def ask_about_dates(update: Update) -> ConversationStatus:
+    update.message.reply_text(
+        'Укажите удобные вам дни на следующей неделе (можно выбрать несколько дат):',
+        reply_markup=make_keyboard_for_dates(update),
+    )
+    return ConversationStatus.days
+
+
 def city_confirm(update: Update, _: CallbackContext) -> ConversationStatus | int:
     user = update.effective_user
     if update.message.text == YES:
         logger.info("User {} (id: {}) confirmed the city.".format(user.name, user.id))
-        update.message.reply_text(
-            'Укажите удобные вам дни на следующей неделе (можно выбрать несколько дат):',
-            reply_markup=make_keyboard_for_dates(update),
-        )
-        return ConversationStatus.days
+        return ask_about_dates(update)
     elif update.message.text == NO:
         logger.info("User {} (id: {}) did not confirm the city. Asking for city again.".format(user.name, user.id))
         update.message.reply_text(
