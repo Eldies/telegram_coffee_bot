@@ -9,6 +9,7 @@ from telegram.ext import (
 
 from app import (
     commands,
+    repeating_jobs,
     settings,
 )
 
@@ -31,7 +32,7 @@ def main() -> None:
     dispatcher.add_handler(CommandHandler('cancel', commands.cancel))
     dispatcher.add_handler(ChatMemberHandler(commands.track_chats, ChatMemberHandler.MY_CHAT_MEMBER))
 
-    updater.job_queue.run_repeating(commands.try_to_group_people, interval=600, first=10)
+    updater.job_queue.run_repeating(repeating_jobs.try_to_group_people, interval=600, first=10)
 
     updater.start_polling()
     updater.idle()
