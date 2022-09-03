@@ -19,6 +19,9 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
+# from utils import substitute_post
+# from unittest.mock import patch
+# @patch('telegram.utils.request.Request.post', substitute_post)
 def main() -> None:
     updater = Updater(settings.BOT_TOKEN)
     updater.bot.set_my_commands([
