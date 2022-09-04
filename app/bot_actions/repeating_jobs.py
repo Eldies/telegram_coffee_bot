@@ -12,7 +12,7 @@ from telegram.ext import (
 
 )
 
-from .mongo import get_users_collection
+from app.mongo import get_users_collection
 
 
 logger = logging.getLogger(__name__)

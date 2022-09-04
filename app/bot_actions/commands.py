@@ -22,12 +22,12 @@ from telegram.ext import (
     MessageHandler,
 )
 
-from .exceptions import GoogleApiError
-from .google_maps import (
+from app.exceptions import GoogleApiError
+from app.google_maps import (
     get_city_data,
     get_timezone_for_location,
 )
-from .mongo import get_users_collection
+from app.mongo import get_users_collection
 
 
 logger = logging.getLogger(__name__)

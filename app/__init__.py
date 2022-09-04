@@ -7,10 +7,10 @@ from telegram.ext import (
     Updater,
 )
 
-from app import (
+from app import settings
+from app.bot_actions import (
     commands,
     repeating_jobs,
-    settings,
 )
 
 logging.basicConfig(
