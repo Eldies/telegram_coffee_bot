@@ -2,8 +2,6 @@
 import pytest
 from unittest.mock import Mock, MagicMock
 
-from telegram.utils.request import Request
-
 
 @pytest.fixture(autouse=True)
 def no_requests(monkeypatch):
@@ -11,12 +9,12 @@ def no_requests(monkeypatch):
     monkeypatch.delattr("requests.sessions.Session.request")
 
 
-@pytest.fixture(autouse=True)
-def env_vars(monkeypatch):
-    monkeypatch.setenv("BOT_TOKEN", "3333:token")
-    monkeypatch.setenv("MONGODB_CONNECTION_STRING", "conn_str")
-    monkeypatch.setenv("MONGODB_DB_NAME", "db_name")
-    monkeypatch.setenv("GOOGLE_MAPS_API_KEY", "api_key")
+@pytest.fixture()
+def settings(monkeypatch):
+    monkeypatch.setattr('app.settings.BOT_TOKEN', "3333:token")
+    monkeypatch.setattr('app.settings.MONGODB_CONNECTION_STRING', "conn_str")
+    monkeypatch.setattr('app.settings.MONGODB_DB_NAME', "db_name")
+    monkeypatch.setattr('app.settings.GOOGLE_MAPS_API_KEY', "api_key")
 
 
 @pytest.fixture(autouse=True)
@@ -41,12 +39,10 @@ def google_maps_timezone_for_location(monkeypatch):
 
 
 @pytest.fixture()
-def updater(monkeypatch, env_vars):
+def updater(monkeypatch, settings):
     import app
     from tests.utils import TestBot
-    updater = app.main(bot=TestBot(
-        token='3333:token',
-        request=Request(),
-    ))
+    monkeypatch.setattr('telegram.ext.updater.ExtBot', TestBot)
+    updater = app.main()
     yield updater
     updater.stop()
