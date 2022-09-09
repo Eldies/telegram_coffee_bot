@@ -22,8 +22,12 @@ logger = logging.getLogger(__name__)
 # from utils import substitute_post
 # from unittest.mock import patch
 # @patch('telegram.utils.request.Request.post', substitute_post)
-def main() -> None:
-    updater = Updater(settings.BOT_TOKEN)
+def main(is_test=False, bot=None):
+    if bot is None:
+        updater = Updater(settings.BOT_TOKEN)
+    else:
+        updater = Updater(bot=bot)
+
     updater.bot.set_my_commands([
         ('/start', 'запускает бот'),
         ('/cancel', 'удаляет все данные, которые вы ранее сообщали боту'),
@@ -35,7 +39,10 @@ def main() -> None:
     dispatcher.add_handler(CommandHandler('cancel', commands.cancel))
     dispatcher.add_handler(ChatMemberHandler(commands.track_chats, ChatMemberHandler.MY_CHAT_MEMBER))
 
-    updater.job_queue.run_repeating(repeating_jobs.try_to_group_people, interval=600, first=10)
+    updater.job_queue.run_repeating(repeating_jobs.try_to_group_people, interval=600, first=1)
 
     updater.start_polling()
-    updater.idle()
+
+    if not is_test:
+        updater.idle()
+    return updater

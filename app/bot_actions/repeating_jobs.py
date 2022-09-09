@@ -22,7 +22,7 @@ def try_to_group_people(context: CallbackContext):
     collection = get_users_collection()
 
     city_to_users = defaultdict(list)
-    for user in collection.find({}):
+    for user in collection.find(filter={}):
         if not user.get('city'):
             continue
         city_to_users[user['city']].append(user)

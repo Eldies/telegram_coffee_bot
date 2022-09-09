@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
+from time import sleep
 from datetime import datetime
+from typing import Union
 
-from telegram.utils.request import Request
-old_post = Request.post
+from telegram.ext.extbot import ExtBot
+from telegram.utils.helpers import DEFAULT_NONE
+from telegram.utils.types import JSONDict, ODVInput
 
 
 BOT_SHORT_DATA = {
@@ -45,16 +48,26 @@ def make_send_message_response(data: dict):
     }
 
 
-def make_post_response(url: str, data: dict):
-    method = url.split('/')[-1]
-    if method == 'setMyCommands':
-        return True
-    elif method == 'getMe':
-        return BOT_LONG_DATA
-    elif method == 'deleteWebhook':
-        return True
-    elif method == 'sendMessage':
-        return make_send_message_response(data)
-    elif method == 'getUpdates':
-        return []
-    raise AttributeError('unknown method')
+class TestBot(ExtBot):
+    sent_messages = []
+
+    def _post(
+        self,
+        endpoint: str,
+        data: JSONDict = None,
+        timeout: ODVInput[float] = DEFAULT_NONE,
+        api_kwargs: JSONDict = None,
+    ) -> Union[bool, JSONDict, None]:
+        if endpoint == 'setMyCommands':
+            return True
+        elif endpoint == 'getMe':
+            return BOT_LONG_DATA
+        elif endpoint == 'deleteWebhook':
+            return True
+        elif endpoint == 'sendMessage':
+            self.sent_messages.append(data)
+            return make_send_message_response(data)
+        elif endpoint == 'getUpdates':
+            sleep(1)
+            return []
+        raise AttributeError('unknown method')
