@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import logging
 from datetime import (
     datetime,
     timedelta,
@@ -7,7 +6,6 @@ from datetime import (
 import pytz
 from time import sleep
 from telegram.utils.helpers import DEFAULT_NONE
-from telegram.utils.request import Request
 
 import pytest
 from unittest.mock import Mock
@@ -98,8 +96,9 @@ class TestTryToGroupPeopleWOBot:
 
 class TestTryToGroupPeopleWBot:
     @pytest.fixture(autouse=True)
-    def _setup(self, mongo_mock, env_vars):
+    def _setup(self, mongo_mock, updater):
         self.mongo_mock = mongo_mock
+        self.updater = updater
 
     def test_try_to_group_people(self):
         tomorrow_iso = (datetime.now(tz=pytz.timezone('Europe/Moscow')) + timedelta(days=1)).date().isoformat()
@@ -119,16 +118,9 @@ class TestTryToGroupPeopleWBot:
                 dates=[tomorrow_iso],
             ),
         ]
-        import app
-        from tests.utils import TestBot
-        updater = app.main(bot=TestBot(
-            token='3333:token',
-            request=Request(),
-        ))
         sleep(1)
-        updater.stop()
-        assert len(updater.bot.sent_messages) == 2
-        assert updater.bot.sent_messages[0] == dict(
+        assert len(self.updater.bot.sent_messages) == 2
+        assert self.updater.bot.sent_messages[0] == dict(
             allow_sending_without_reply=DEFAULT_NONE,
             chat_id=1111,
             disable_notification=DEFAULT_NONE,
@@ -136,7 +128,7 @@ class TestTryToGroupPeopleWBot:
             parse_mode=DEFAULT_NONE,
             text='Я подобрал группу для встречи в "Moscow" завтра, {}: @name, @name2'.format(tomorrow_iso),
         )
-        assert updater.bot.sent_messages[1] == dict(
+        assert self.updater.bot.sent_messages[1] == dict(
             allow_sending_without_reply=DEFAULT_NONE,
             chat_id=2222,
             disable_notification=DEFAULT_NONE,

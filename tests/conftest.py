@@ -41,13 +41,12 @@ def google_maps_timezone_for_location(monkeypatch):
 
 
 @pytest.fixture()
-def run_main(monkeypatch, env_vars):
+def updater(monkeypatch, env_vars):
     import app
     from tests.utils import TestBot
     updater = app.main(bot=TestBot(
         token='3333:token',
         request=Request(),
     ))
-    updater.job_queue.stop()
-    yield
+    yield updater
     updater.stop()
