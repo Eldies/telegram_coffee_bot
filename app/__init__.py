@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 # from utils import substitute_post
 # from unittest.mock import patch
 # @patch('telegram.utils.request.Request.post', substitute_post)
-def main(is_test=False, bot=None):
+def main(bot=None):
     if bot is None:
         updater = Updater(settings.BOT_TOKEN)
     else:
@@ -43,6 +43,4 @@ def main(is_test=False, bot=None):
 
     updater.start_polling()
 
-    if not is_test:
-        updater.idle()
     return updater

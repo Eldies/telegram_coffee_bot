@@ -121,7 +121,7 @@ class TestTryToGroupPeopleWBot:
         ]
         import app
         from tests.utils import TestBot
-        updater = app.main(is_test=True, bot=TestBot(
+        updater = app.main(bot=TestBot(
             token='3333:token',
             request=Request(),
         ))

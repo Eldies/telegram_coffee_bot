@@ -44,7 +44,7 @@ def google_maps_timezone_for_location(monkeypatch):
 def run_main(monkeypatch, env_vars):
     import app
     from tests.utils import TestBot
-    updater = app.main(is_test=True, bot=TestBot(
+    updater = app.main(bot=TestBot(
         token='3333:token',
         request=Request(),
     ))

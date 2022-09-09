@@ -2,4 +2,5 @@
 from . import main
 
 if __name__ == '__main__':
-    main()
+    updater = main()
+    updater.idle()
