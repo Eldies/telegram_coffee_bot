@@ -22,6 +22,7 @@ from telegram.ext import (
     MessageHandler,
 )
 
+from app import texts
 from app.exceptions import GoogleApiError
 from app.google_maps import (
     get_city_data,
@@ -105,20 +106,19 @@ def track_chats(update: Update, _: CallbackContext) -> None:
 def start(update: Update, _: CallbackContext) -> ConversationStatus:
     user = update.effective_user
     collection = get_users_collection()
-    item = collection.find_one(dict(_id=user.id))
+    item = collection.find_one(filter=dict(_id=user.id))
     if item is None:
-        logger.info("User {} (id: {}) started bot.".format(user.name, user.id))
-        collection.insert_one(dict(
-            _id=user.id,
-            name=user.name,
-        ))
+        logger.info("User {} (id: {}) started the bot for the first time.".format(user.name, user.id))
+        collection.insert_one(
+            document=dict(
+                _id=user.id,
+                name=user.name,
+            ),
+        )
     logger.info("User {} (id: {}) started conversation.".format(user.name, user.id))
 
     update.message.reply_text(
-        'Привет, {}!\n'
-        'Я постараюсь найти группу людей, с которыми Вам удобно встретиться.'
-        'Введите /cancel если передумаете.\n\n'
-        'Вы находитесь в Москве?'.format(user.name),
+        text=texts.START_TEXT.format(user.name),
         reply_markup=ReplyKeyboardMarkup(
             [[YES, NO]],
             resize_keyboard=True,
