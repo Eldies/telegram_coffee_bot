@@ -19,30 +19,28 @@ class TestTryToGroupPeopleWOBot:
         self.mongo_mock = mongo_mock
 
     def test_does_nothing_if_no_users(self):
-        self.mongo_mock.return_value['users'].find.return_value = []
+        self.mongo_mock['users'].find.return_value = []
         context_mock = Mock()
         try_to_group_people(context_mock)
-        assert self.mongo_mock.call_count == 1
-        assert self.mongo_mock.return_value['users'].find.call_count == 1
-        assert self.mongo_mock.return_value['users'].find.call_args.kwargs == dict(filter={})
+        assert self.mongo_mock['users'].find.call_count == 1
+        assert self.mongo_mock['users'].find.call_args.kwargs == dict(filter={})
         assert context_mock.bot.send_message.call_count == 0
 
     def test_does_nothing_if_users_does_not_have_cities(self):
-        self.mongo_mock.return_value['users'].find.return_value = [
+        self.mongo_mock['users'].find.return_value = [
             dict(),
             dict(),
             dict(),
         ]
         context_mock = Mock()
         try_to_group_people(context_mock)
-        assert self.mongo_mock.call_count == 1
-        assert self.mongo_mock.return_value['users'].find.call_count == 1
-        assert self.mongo_mock.return_value['users'].find.call_args.kwargs == dict(filter={})
+        assert self.mongo_mock['users'].find.call_count == 1
+        assert self.mongo_mock['users'].find.call_args.kwargs == dict(filter={})
         assert context_mock.bot.send_message.call_count == 0
 
     @pytest.mark.skip  # skip until its actually true
     def test_does_nothing_if_only_one_user(self):
-        self.mongo_mock.return_value['users'].find.return_value = [
+        self.mongo_mock['users'].find.return_value = [
             dict(
                 _id=1111,
                 name='name',
@@ -55,14 +53,13 @@ class TestTryToGroupPeopleWOBot:
         ]
         context_mock = Mock()
         try_to_group_people(context_mock)
-        assert self.mongo_mock.call_count == 1
-        assert self.mongo_mock.return_value['users'].find.call_count == 1
-        assert self.mongo_mock.return_value['users'].find.call_args.kwargs == dict(filter={})
+        assert self.mongo_mock['users'].find.call_count == 1
+        assert self.mongo_mock['users'].find.call_args.kwargs == dict(filter={})
         assert context_mock.bot.send_message.call_count == 0
 
     def test_groups_2_users(self):
         tomorrow_iso = (datetime.now(tz=pytz.timezone('Europe/Moscow')) + timedelta(days=1)).date().isoformat()
-        self.mongo_mock.return_value['users'].find.return_value = [
+        self.mongo_mock['users'].find.return_value = [
             dict(
                 _id=1111,
                 name='@name',
@@ -80,9 +77,8 @@ class TestTryToGroupPeopleWOBot:
         ]
         context_mock = Mock()
         try_to_group_people(context_mock)
-        assert self.mongo_mock.call_count == 1
-        assert self.mongo_mock.return_value['users'].find.call_count == 1
-        assert self.mongo_mock.return_value['users'].find.call_args.kwargs == dict(filter={})
+        assert self.mongo_mock['users'].find.call_count == 1
+        assert self.mongo_mock['users'].find.call_args.kwargs == dict(filter={})
         assert context_mock.bot.send_message.call_count == 2
         assert context_mock.bot.send_message.call_args_list[0].kwargs == dict(
             chat_id=1111,
@@ -102,7 +98,7 @@ class TestTryToGroupPeopleWBot:
 
     def test_try_to_group_people(self):
         tomorrow_iso = (datetime.now(tz=pytz.timezone('Europe/Moscow')) + timedelta(days=1)).date().isoformat()
-        self.mongo_mock.return_value['users'].find.return_value = [
+        self.mongo_mock['users'].find.return_value = [
             dict(
                 _id=1111,
                 name='@name',

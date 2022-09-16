@@ -18,10 +18,17 @@ def settings(monkeypatch):
 
 
 @pytest.fixture(autouse=True)
+def mongo_client_mock(monkeypatch):
+    mongo_client_mock = MagicMock()
+    monkeypatch.setattr('app.mongo.MongoClient', mongo_client_mock)
+    return mongo_client_mock
+
+
+@pytest.fixture()
 def mongo_mock(monkeypatch):
     mongo_mock = MagicMock()
     monkeypatch.setattr('app.mongo.get_mongo_db', mongo_mock)
-    return mongo_mock
+    return mongo_mock()
 
 
 @pytest.fixture(autouse=True)
