@@ -1,12 +1,19 @@
 # -*- coding: utf-8 -*-
+import json
+from time import sleep
+
 import pytest
 from unittest.mock import Mock
+
+from telegram.utils.helpers import DEFAULT_NONE
 
 from app import (
     commands,
     texts,
 )
 from app.bot_actions.commands import ConversationStatus
+
+from tests.utils import make_update_with_start
 
 
 class TestStart:
@@ -57,3 +64,40 @@ class TestStart:
         assert len(update_mock.message.reply_text.call_args_list[0].kwargs['reply_markup'].keyboard[0]) == 2
         assert update_mock.message.reply_text.call_args_list[0].kwargs['reply_markup'].keyboard[0][0].text == 'Да'
         assert update_mock.message.reply_text.call_args_list[0].kwargs['reply_markup'].keyboard[0][1].text == 'Нет'
+
+
+class TestStartWBot:
+    @pytest.fixture(autouse=True)
+    def _setup(self, mongo_mock, updater):
+        self.mongo_mock = mongo_mock
+        self.updater = updater
+        updater.job_queue.stop()
+
+    def test_ok(self):
+        self.mongo_mock.return_value['users'].find_one.return_value = dict(
+            _id=1111,
+            name='@name',
+        )
+        self.updater.bot.update_to_send = make_update_with_start()
+        sleep(0.1)
+        assert len(self.updater.bot.sent_messages) == 1
+        sent_message = self.updater.bot.sent_messages[0]
+        assert 'reply_markup' in sent_message
+        sent_message['reply_markup'] = json.loads(sent_message['reply_markup'])
+        assert sent_message == dict(
+            allow_sending_without_reply=DEFAULT_NONE,
+            chat_id=5000566356,
+            disable_notification=DEFAULT_NONE,
+            disable_web_page_preview=DEFAULT_NONE,
+            parse_mode=DEFAULT_NONE,
+            text=texts.START_TEXT.format('@eldies'),
+            reply_markup=dict(
+                keyboard=[[
+                    dict(text='Да'),
+                    dict(text='Нет'),
+                ]],
+                selective=False,
+                resize_keyboard=True,
+                one_time_keyboard=False
+            )
+        )

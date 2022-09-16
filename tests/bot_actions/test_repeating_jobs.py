@@ -118,7 +118,7 @@ class TestTryToGroupPeopleWBot:
                 dates=[tomorrow_iso],
             ),
         ]
-        sleep(1)
+        sleep(2)
         assert len(self.updater.bot.sent_messages) == 2
         assert self.updater.bot.sent_messages[0] == dict(
             allow_sending_without_reply=DEFAULT_NONE,

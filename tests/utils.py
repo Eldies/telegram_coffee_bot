@@ -27,6 +27,11 @@ USER_CHAT_DATA = {
     'username': 'eldies',
     'type': 'private',
 }
+USER_FROM_DATA = dict(
+    {k: USER_CHAT_DATA[k] for k in ['id', 'first_name', 'last_name', 'username']},
+    is_bot=False,
+    language_code='ru',
+)
 
 
 LAST_MESSAGE_ID = 0
@@ -48,8 +53,29 @@ def make_send_message_response(data: dict):
     }
 
 
+def make_update_with_start():
+    return {
+        'update_id': 821428760,
+        'message': {
+            'message_id': get_next_message_id(),
+            'from': USER_FROM_DATA,
+            'chat': USER_CHAT_DATA,
+            'date': 1663351421,
+            'text': '/start',
+            'entities': [{
+                'offset': 0,
+                'length': 6,
+                'type': 'bot_command',
+            }],
+        },
+    }
+
+
 class TestBot(ExtBot):
-    sent_messages = []
+    def __init__(self, *args, **kwargs):
+        super(TestBot, self).__init__(*args, **kwargs)
+        self.sent_messages = []
+        self.update_to_send = None
 
     def _post(
         self,
@@ -68,6 +94,8 @@ class TestBot(ExtBot):
             self.sent_messages.append(data)
             return make_send_message_response(data)
         elif endpoint == 'getUpdates':
-            sleep(1)
-            return []
+            sleep(0.01)
+            result = [] if self.update_to_send is None else [self.update_to_send]
+            self.update_to_send = None
+            return result
         raise AttributeError('unknown method')
