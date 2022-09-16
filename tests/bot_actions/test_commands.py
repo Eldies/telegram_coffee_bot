@@ -5,6 +5,7 @@ from time import sleep
 import pytest
 from unittest.mock import Mock
 
+from telegram.ext import ConversationHandler
 from telegram.utils.helpers import DEFAULT_NONE
 
 from app import (
@@ -74,6 +75,9 @@ class TestStartWBot:
         updater.job_queue.stop()
 
     def test_ok(self):
+        assert len([h for h in self.updater.dispatcher.handlers[0] if isinstance(h, ConversationHandler)]) == 1
+        conversation_handler = [h for h in self.updater.dispatcher.handlers[0] if isinstance(h, ConversationHandler)][0]
+        assert len(conversation_handler.conversations) == 0
         self.mongo_mock.return_value['users'].find_one.return_value = dict(
             _id=1111,
             name='@name',
@@ -101,3 +105,6 @@ class TestStartWBot:
                 one_time_keyboard=False
             )
         )
+        assert len(conversation_handler.conversations) == 1
+        assert (5000566356, 5000566356) in conversation_handler.conversations
+        assert conversation_handler.conversations[(5000566356, 5000566356)] == ConversationStatus.city_is_moscow
