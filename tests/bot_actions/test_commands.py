@@ -90,11 +90,11 @@ class TestStartWBot:
         sent_message['reply_markup'] = json.loads(sent_message['reply_markup'])
         assert sent_message == dict(
             allow_sending_without_reply=DEFAULT_NONE,
-            chat_id=5000566356,
+            chat_id=2222222,
             disable_notification=DEFAULT_NONE,
             disable_web_page_preview=DEFAULT_NONE,
             parse_mode=DEFAULT_NONE,
-            text=texts.START_TEXT.format('@eldies'),
+            text=texts.START_TEXT.format('@username'),
             reply_markup=dict(
                 keyboard=[[
                     dict(text='Да'),
@@ -106,5 +106,5 @@ class TestStartWBot:
             )
         )
         assert len(conversation_handler.conversations) == 1
-        assert (5000566356, 5000566356) in conversation_handler.conversations
-        assert conversation_handler.conversations[(5000566356, 5000566356)] == ConversationStatus.city_is_moscow
+        assert (2222222, 2222222) in conversation_handler.conversations
+        assert conversation_handler.conversations[(2222222, 2222222)] == ConversationStatus.city_is_moscow

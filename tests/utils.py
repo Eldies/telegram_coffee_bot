@@ -9,10 +9,10 @@ from telegram.utils.types import JSONDict, ODVInput
 
 
 BOT_SHORT_DATA = {
-    'id': 5000561895,
+    'id': 1111111,
     'is_bot': True,
-    'first_name': 'eldies_test_bot',
-    'username': 'eldies_test_bot',
+    'first_name': 'test_bot',
+    'username': 'test_bot',
 }
 BOT_LONG_DATA = dict(
     BOT_SHORT_DATA,
@@ -21,10 +21,10 @@ BOT_LONG_DATA = dict(
     supports_inline_queries=False,
 )
 USER_CHAT_DATA = {
-    'id': 5000566356,
-    'first_name': 'Dlavrukhin',
-    'last_name': 'Test',
-    'username': 'eldies',
+    'id': 2222222,
+    'first_name': 'Firstname',
+    'last_name': 'Lastname',
+    'username': 'username',
     'type': 'private',
 }
 USER_FROM_DATA = dict(
