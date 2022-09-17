@@ -7,8 +7,6 @@ from unittest.mock import Mock, MagicMock
 def log_level(caplog):
     import logging
     caplog.set_level(logging.INFO)
-    yield
-    assert [r for r in caplog.records if r.levelno >= logging.WARNING] == []
 
 
 @pytest.fixture(autouse=True)

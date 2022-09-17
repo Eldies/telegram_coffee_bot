@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import json
+import logging
 from time import sleep
 
 import pytest
@@ -30,7 +31,9 @@ class TestStart:
         update_mock = Mock()
         update_mock.effective_user.id = 2222
         update_mock.effective_user.name = '@name2'
+
         result = commands.start(update_mock, Mock())
+
         assert result == ConversationStatus.city_is_moscow
         assert self.mongo_mock['users'].find_one.call_count == 1
         assert self.mongo_mock['users'].find_one.call_args.kwargs == dict(filter=dict(_id=2222))
@@ -49,7 +52,9 @@ class TestStart:
         update_mock = Mock()
         update_mock.effective_user.id = 2222
         update_mock.effective_user.name = '@name2'
+
         result = commands.start(update_mock, Mock())
+
         assert result == ConversationStatus.city_is_moscow
         assert self.mongo_mock['users'].find_one.call_count == 1
         assert self.mongo_mock['users'].find_one.call_args.kwargs == dict(filter=dict(_id=2222))
@@ -67,9 +72,10 @@ class TestStart:
 
 class TestStartWBot:
     @pytest.fixture(autouse=True)
-    def _setup(self, mongo_mock, updater):
+    def _setup(self, mongo_mock, updater, caplog):
         self.mongo_mock = mongo_mock
         self.updater = updater
+        self.caplog = caplog
         updater.job_queue.stop()
 
     def test_ok(self):
@@ -80,8 +86,10 @@ class TestStartWBot:
             _id=1111,
             name='@name',
         )
+
         self.updater.bot.update_to_send = make_update_with_start()
         sleep(0.1)
+
         assert len(self.updater.bot.sent_messages) == 1
         sent_message = self.updater.bot.sent_messages[0]
         assert 'reply_markup' in sent_message
@@ -106,3 +114,4 @@ class TestStartWBot:
         assert len(conversation_handler.conversations) == 1
         assert (2222222, 2222222) in conversation_handler.conversations
         assert conversation_handler.conversations[(2222222, 2222222)] == ConversationStatus.city_is_moscow
+        assert [r for r in self.caplog.records if r.levelno >= logging.WARNING] == [], 'Log contains warnings/errors'
