@@ -22,11 +22,8 @@ logger = logging.getLogger(__name__)
 # from utils import substitute_post
 # from unittest.mock import patch
 # @patch('telegram.utils.request.Request.post', substitute_post)
-def main(bot=None):
-    if bot is None:
-        updater = Updater(settings.BOT_TOKEN)
-    else:
-        updater = Updater(bot=bot)
+def main():
+    updater = Updater(settings.BOT_TOKEN)
 
     updater.bot.set_my_commands([
         ('/start', 'запускает бот'),
