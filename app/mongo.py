@@ -15,4 +15,4 @@ def get_mongo_db():
 
 
 def get_users_collection():
-    return get_mongo_db()['users']
+    return get_mongo_db().users
