@@ -29,7 +29,6 @@ def settings(monkeypatch):
 @pytest.fixture(autouse=True)
 def mongo_mock(monkeypatch, settings):
     monkeypatch.setattr('app.mongo.__mongo_client', None)
-#    monkeypatch.setattr('app.mongo.MongoClient', mongomock.MongoClient)
     with mongomock.patch(servers=(('host', 11111),)):
         yield pymongo.MongoClient('host:11111')['db_name']
 
