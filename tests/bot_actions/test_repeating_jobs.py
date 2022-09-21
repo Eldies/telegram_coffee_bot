@@ -19,28 +19,27 @@ class TestTryToGroupPeopleWOBot:
         self.mongo_mock = mongo_mock
 
     def test_does_nothing_if_no_users(self):
-        self.mongo_mock.users.find.return_value = []
         context_mock = Mock()
+
         try_to_group_people(context_mock)
-        assert self.mongo_mock.users.find.call_count == 1
-        assert self.mongo_mock.users.find.call_args.kwargs == dict(filter={})
+
         assert context_mock.bot.send_message.call_count == 0
 
     def test_does_nothing_if_users_does_not_have_cities(self):
-        self.mongo_mock.users.find.return_value = [
-            dict(),
-            dict(),
-            dict(),
-        ]
+        self.mongo_mock.users.insert_many([
+            dict(_id=1111, name='@name1'),
+            dict(_id=2222, name='@name2'),
+            dict(_id=3333, name='@name3'),
+        ])
         context_mock = Mock()
+
         try_to_group_people(context_mock)
-        assert self.mongo_mock.users.find.call_count == 1
-        assert self.mongo_mock.users.find.call_args.kwargs == dict(filter={})
+
         assert context_mock.bot.send_message.call_count == 0
 
     @pytest.mark.xfail  # it should fail for now
     def test_does_nothing_if_only_one_user(self):
-        self.mongo_mock.users.find.return_value = [
+        self.mongo_mock.users.insert_one(
             dict(
                 _id=1111,
                 name='name',
@@ -50,16 +49,16 @@ class TestTryToGroupPeopleWOBot:
                     (datetime.now(tz=pytz.timezone('Europe/Moscow')) + timedelta(days=1)).date().isoformat(),
                 ],
             ),
-        ]
+        )
         context_mock = Mock()
+
         try_to_group_people(context_mock)
-        assert self.mongo_mock.users.find.call_count == 1
-        assert self.mongo_mock.users.find.call_args.kwargs == dict(filter={})
+
         assert context_mock.bot.send_message.call_count == 0
 
     def test_groups_2_users(self):
         tomorrow_iso = (datetime.now(tz=pytz.timezone('Europe/Moscow')) + timedelta(days=1)).date().isoformat()
-        self.mongo_mock.users.find.return_value = [
+        self.mongo_mock.users.insert_many([
             dict(
                 _id=1111,
                 name='@name',
@@ -74,11 +73,11 @@ class TestTryToGroupPeopleWOBot:
                 timezone='Europe/Moscow',
                 dates=[tomorrow_iso],
             ),
-        ]
+        ])
         context_mock = Mock()
+
         try_to_group_people(context_mock)
-        assert self.mongo_mock.users.find.call_count == 1
-        assert self.mongo_mock.users.find.call_args.kwargs == dict(filter={})
+
         assert context_mock.bot.send_message.call_count == 2
         assert context_mock.bot.send_message.call_args_list[0].kwargs == dict(
             chat_id=1111,
@@ -98,7 +97,7 @@ class TestTryToGroupPeopleWBot:
 
     def test_try_to_group_people(self):
         tomorrow_iso = (datetime.now(tz=pytz.timezone('Europe/Moscow')) + timedelta(days=1)).date().isoformat()
-        self.mongo_mock.users.find.return_value = [
+        self.mongo_mock.users.insert_many([
             dict(
                 _id=1111,
                 name='@name',
@@ -113,7 +112,7 @@ class TestTryToGroupPeopleWBot:
                 timezone='Europe/Moscow',
                 dates=[tomorrow_iso],
             ),
-        ]
+        ])
         sleep(2)
         assert len(self.updater.bot.sent_messages) == 2
         assert self.updater.bot.sent_messages[0] == dict(

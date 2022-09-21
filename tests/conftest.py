@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
+import pymongo
+
+import mongomock
 import pytest
-from unittest.mock import Mock, MagicMock
+from unittest.mock import Mock
 
 
 @pytest.fixture(autouse=True)
@@ -18,17 +21,17 @@ def no_requests(monkeypatch):
 @pytest.fixture()
 def settings(monkeypatch):
     monkeypatch.setattr('app.settings.BOT_TOKEN', "3333:token")
-    monkeypatch.setattr('app.settings.MONGODB_CONNECTION_STRING', "conn_str")
+    monkeypatch.setattr('app.settings.MONGODB_CONNECTION_STRING', "host:11111")
     monkeypatch.setattr('app.settings.MONGODB_DB_NAME', "db_name")
     monkeypatch.setattr('app.settings.GOOGLE_MAPS_API_KEY', "api_key")
 
 
 @pytest.fixture(autouse=True)
 def mongo_mock(monkeypatch, settings):
-    mongo_client_mock = MagicMock()
     monkeypatch.setattr('app.mongo.__mongo_client', None)
-    monkeypatch.setattr('app.mongo.MongoClient', mongo_client_mock)
-    yield mongo_client_mock()['db_name']
+#    monkeypatch.setattr('app.mongo.MongoClient', mongomock.MongoClient)
+    with mongomock.patch(servers=(('host', 11111),)):
+        yield pymongo.MongoClient('host:11111')['db_name']
 
 
 @pytest.fixture(autouse=True)
