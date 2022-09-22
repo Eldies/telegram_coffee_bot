@@ -33,14 +33,14 @@ def mongo_mock(monkeypatch, settings):
         yield pymongo.MongoClient('host:11111')['db_name']
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture()
 def google_maps_city_data(monkeypatch):
     city_data_mock = Mock
     monkeypatch.setattr('app.google_maps.get_city_data', city_data_mock)
     return city_data_mock
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture()
 def google_maps_timezone_for_location(monkeypatch):
     timezone_for_location_mock = Mock
     monkeypatch.setattr('app.google_maps.get_timezone_for_location', timezone_for_location_mock)
