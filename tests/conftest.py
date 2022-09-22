@@ -27,8 +27,9 @@ def settings(monkeypatch):
 
 
 @pytest.fixture(autouse=True)
-def kill_global_vars(monkeypatch):
-    monkeypatch.setattr('app.mongo.__mongo_client', None)
+def flush_singletons(monkeypatch):
+    from app import utils
+    utils.Singleton._instances = {}
 
 
 @pytest.fixture()

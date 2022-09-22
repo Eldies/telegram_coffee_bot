@@ -3,16 +3,17 @@ import pymongo
 
 from . import settings
 
-__mongo_client = None
+from app.utils import Singleton
 
 
-def get_mongo_db():
-    global __mongo_client
-    if __mongo_client is None:
-        __mongo_client = pymongo.MongoClient(settings.MONGODB_CONNECTION_STRING)
+class Mongo(metaclass=Singleton):
+    def __init__(self):
+        self.client = pymongo.MongoClient(settings.MONGODB_CONNECTION_STRING)
 
-    return __mongo_client[settings.MONGODB_DB_NAME]
+    @property
+    def db(self):
+        return self.client[settings.MONGODB_DB_NAME]
 
 
 def get_users_collection():
-    return get_mongo_db().users
+    return Mongo().db.users
