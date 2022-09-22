@@ -8,11 +8,11 @@ from app.utils import Singleton
 
 class Mongo(metaclass=Singleton):
     def __init__(self):
-        self.client = pymongo.MongoClient(settings.MONGODB_CONNECTION_STRING)
+        self._client = pymongo.MongoClient(settings.MONGODB_CONNECTION_STRING)
 
     @property
     def db(self):
-        return self.client[settings.MONGODB_DB_NAME]
+        return self._client[settings.MONGODB_DB_NAME]
 
 
 def get_users_collection():
