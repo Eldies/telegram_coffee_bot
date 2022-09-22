@@ -48,10 +48,16 @@ def google_maps_timezone_for_location(monkeypatch):
 
 
 @pytest.fixture()
-def updater(monkeypatch, settings):
+def updater_with_job_queue(monkeypatch, settings):
     import app
     from tests.utils import TestBot
     monkeypatch.setattr('telegram.ext.updater.ExtBot', TestBot)
     updater = app.main()
     yield updater
     updater.stop()
+
+
+@pytest.fixture()
+def updater(updater_with_job_queue):
+    updater_with_job_queue.job_queue.stop()
+    return updater_with_job_queue

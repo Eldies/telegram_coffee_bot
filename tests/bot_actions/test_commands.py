@@ -70,7 +70,6 @@ class TestStartWBot:
         self.mongo_mock = mongo_mock
         self.updater = updater
         self.caplog = caplog
-        updater.job_queue.stop()
 
     def test_ok(self):
         assert len([h for h in self.updater.dispatcher.handlers[0] if isinstance(h, ConversationHandler)]) == 1

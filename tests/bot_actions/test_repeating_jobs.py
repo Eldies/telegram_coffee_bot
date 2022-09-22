@@ -91,9 +91,9 @@ class TestTryToGroupPeopleWOBot:
 
 class TestTryToGroupPeopleWBot:
     @pytest.fixture(autouse=True)
-    def _setup(self, mongo_mock, updater):
+    def _setup(self, mongo_mock, updater_with_job_queue):
         self.mongo_mock = mongo_mock
-        self.updater = updater
+        self.updater = updater_with_job_queue
 
     def test_try_to_group_people(self):
         tomorrow_iso = (datetime.now(tz=pytz.timezone('Europe/Moscow')) + timedelta(days=1)).date().isoformat()
