@@ -22,6 +22,7 @@ def get_city_data(city: str) -> dict:
 
 
 def get_timezone_for_location(latitude: int, longitude: int) -> str:
+    # https://developers.google.com/maps/documentation/timezone/requests-timezone?hl=en_US
     response = requests.get(
         url='https://maps.googleapis.com/maps/api/timezone/json',
         params=dict(
@@ -31,7 +32,7 @@ def get_timezone_for_location(latitude: int, longitude: int) -> str:
         ),
     )
     result = response.json()
-    if result['status'] not in ('OK', 'ZERO_RESULTS'):
+    if result['status'] not in ('OK',):
         raise GoogleApiError(result.get('error_message', 'no error message'))
 
     return result['timeZoneId']

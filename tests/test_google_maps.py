@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 import pytest
 
+from app.exceptions import GoogleApiError
 from app.google_maps import (
     get_city_data,
     get_timezone_for_location,
 )
+
 from tests.utils import (
     make_city_data_response,
     make_timezone_for_location_response,
@@ -32,6 +34,8 @@ class TestCityData:
         assert isinstance(result['results'], list)
         assert len(result['results']) == 1
         assert result['results'][0]['formatted_address'] == 'Вашингтон, округ Колумбия, США'
+        assert result['results'][0]['types'] == ['locality', 'political']
+        assert result['results'][0]['geometry']['location'] == {'lat': 38.9071923, 'lng': -77.0368707}
 
 
 class TestTimezoneForLocation:
@@ -39,8 +43,11 @@ class TestTimezoneForLocation:
     def _setup(self, settings):
         pass
 
-    @pytest.mark.parametrize('get', [make_timezone_for_location_response()], indirect=['get'])
-    def test_ok(self, get):
+    @pytest.mark.parametrize('get, tzid', [
+        [make_timezone_for_location_response(), 'America/New_York'],
+        [make_timezone_for_location_response(tz_id='Europe/Moscow'), 'Europe/Moscow'],
+    ], indirect=['get'])
+    def test_ok(self, get, tzid):
         result = get_timezone_for_location(latitude=123, longitude=456)
         assert get.call_count == 1
         assert get.call_args.kwargs == dict(
@@ -51,4 +58,25 @@ class TestTimezoneForLocation:
             ),
             url='https://maps.googleapis.com/maps/api/timezone/json',
         )
-        assert result == 'America/New_York'
+        assert result == tzid
+
+    @pytest.mark.parametrize('get', [
+        make_timezone_for_location_response(status='INVALID_REQUEST'),
+        make_timezone_for_location_response(status='OVER_DAILY_LIMIT'),
+        make_timezone_for_location_response(status='OVER_QUERY_LIMIT'),
+        make_timezone_for_location_response(status='REQUEST_DENIED'),
+        make_timezone_for_location_response(status='UNKNOWN_ERROR'),
+        make_timezone_for_location_response(status='ZERO_RESULTS'),
+    ], indirect=['get'])
+    def test_not_ok_status(self, get):
+        with pytest.raises(GoogleApiError):
+            get_timezone_for_location(latitude=123, longitude=456)
+        assert get.call_count == 1
+        assert get.call_args.kwargs == dict(
+            params=dict(
+                key='api_key',
+                timestamp=0,
+                location='123,456'
+            ),
+            url='https://maps.googleapis.com/maps/api/timezone/json',
+        )

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from datetime import datetime
+import pytz
 from time import sleep
 from typing import Union
 
@@ -127,11 +128,11 @@ def make_city_data_response():
     }
 
 
-def make_timezone_for_location_response():
+def make_timezone_for_location_response(status='OK', tz_id='America/New_York'):
     return {
         'dstOffset': 0,
-        'rawOffset': -18000,
-        'status': 'OK',
-        'timeZoneId': 'America/New_York',
+        'rawOffset': int(datetime.now(pytz.timezone(tz_id)).utcoffset().total_seconds()),
+        'status': status,
+        'timeZoneId': tz_id,
         'timeZoneName': 'Eastern Standard Time',
     }
