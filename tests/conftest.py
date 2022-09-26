@@ -66,3 +66,11 @@ def updater_with_job_queue(monkeypatch, settings):
 def updater(updater_with_job_queue):
     updater_with_job_queue.job_queue.stop()
     return updater_with_job_queue
+
+
+@pytest.fixture
+def get(monkeypatch, request):
+    get_mock = Mock()
+    get_mock.return_value.json.return_value = request.param
+    monkeypatch.setattr('requests.get', get_mock)
+    return get_mock

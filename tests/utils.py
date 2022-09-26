@@ -99,3 +99,39 @@ class TestBot(ExtBot):
             self.update_to_send = None
             return result
         raise AttributeError('unknown method')
+
+
+def make_city_data_response():
+    return {
+        'results': [
+            {
+                'address_components': [
+                    {'long_name': 'Вашингтон', 'short_name': 'Вашингтон', 'types': ['locality', 'political']},
+                    {'long_name': 'District of Columbia', 'short_name': 'District of Columbia', 'types': ['administrative_area_level_2', 'political']},
+                    {'long_name': 'округ Колумбия', 'short_name': 'DC', 'types': ['administrative_area_level_1', 'political']},
+                    {'long_name': 'Соединенные Штаты Америки', 'short_name': 'US', 'types': ['country', 'political']},
+                ],
+                'formatted_address': 'Вашингтон, округ Колумбия, США',
+                'geometry': {
+                    'bounds': {'northeast': {'lat': 38.9958641, 'lng': -76.909393}, 'southwest': {'lat': 38.7916449, 'lng': -77.119759}},
+                    'location': {'lat': 38.9071923, 'lng': -77.0368707},
+                    'location_type': 'APPROXIMATE',
+                    'viewport': {'northeast': {'lat': 38.9958641, 'lng': -76.909393}, 'southwest': {'lat': 38.7916449, 'lng': -77.119759}},
+                },
+                'partial_match': True,
+                'place_id': 'ChIJW-T2Wt7Gt4kRKl2I1CJFUsI',
+                'types': ['locality', 'political']
+            }
+        ],
+        'status': 'OK',
+    }
+
+
+def make_timezone_for_location_response():
+    return {
+        'dstOffset': 0,
+        'rawOffset': -18000,
+        'status': 'OK',
+        'timeZoneId': 'America/New_York',
+        'timeZoneName': 'Eastern Standard Time',
+    }
