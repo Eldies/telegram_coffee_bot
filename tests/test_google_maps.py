@@ -37,6 +37,26 @@ class TestCityData:
         assert result['results'][0]['types'] == ['locality', 'political']
         assert result['results'][0]['geometry']['location'] == {'lat': 38.9071923, 'lng': -77.0368707}
 
+    @pytest.mark.parametrize('get', [
+        make_city_data_response(status='INVALID_REQUEST'),
+        make_city_data_response(status='OVER_DAILY_LIMIT'),
+        make_city_data_response(status='OVER_QUERY_LIMIT'),
+        make_city_data_response(status='REQUEST_DENIED'),
+        make_city_data_response(status='UNKNOWN_ERROR'),
+    ], indirect=['get'])
+    def test_not_ok_status(self, get):
+        with pytest.raises(GoogleApiError):
+            get_city_data('text')
+        assert get.call_count == 1
+        assert get.call_args.kwargs == dict(
+            params=dict(
+                address='text',
+                key='api_key',
+                language='ru',
+            ),
+            url='https://maps.googleapis.com/maps/api/geocode/json',
+        )
+
 
 class TestTimezoneForLocation:
     @pytest.fixture(autouse=True)
@@ -69,8 +89,9 @@ class TestTimezoneForLocation:
         make_timezone_for_location_response(status='ZERO_RESULTS'),
     ], indirect=['get'])
     def test_not_ok_status(self, get):
-        with pytest.raises(GoogleApiError):
+        with pytest.raises(GoogleApiError) as excinfo:
             get_timezone_for_location(latitude=123, longitude=456)
+        assert str(excinfo.value) == 'no error message'
         assert get.call_count == 1
         assert get.call_args.kwargs == dict(
             params=dict(
@@ -80,3 +101,11 @@ class TestTimezoneForLocation:
             ),
             url='https://maps.googleapis.com/maps/api/timezone/json',
         )
+
+    @pytest.mark.parametrize('get', [
+        make_timezone_for_location_response(status='INVALID_REQUEST', errorMessage='custom error message'),
+    ], indirect=['get'])
+    def test_not_ok_status_with_error_message(self, get):
+        with pytest.raises(GoogleApiError) as excinfo:
+            get_timezone_for_location(latitude=123, longitude=456)
+        assert str(excinfo.value) == 'custom error message'

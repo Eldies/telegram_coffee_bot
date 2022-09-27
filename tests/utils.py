@@ -102,7 +102,7 @@ class TestBot(ExtBot):
         raise AttributeError('unknown method')
 
 
-def make_city_data_response():
+def make_city_data_response(status='OK'):
     return {
         'results': [
             {
@@ -124,15 +124,18 @@ def make_city_data_response():
                 'types': ['locality', 'political']
             }
         ],
-        'status': 'OK',
+        'status': status,
     }
 
 
-def make_timezone_for_location_response(status='OK', tz_id='America/New_York'):
-    return {
+def make_timezone_for_location_response(status='OK', tz_id='America/New_York', errorMessage=None):
+    result = {
         'dstOffset': 0,
         'rawOffset': int(datetime.now(pytz.timezone(tz_id)).utcoffset().total_seconds()),
         'status': status,
         'timeZoneId': tz_id,
         'timeZoneName': 'Eastern Standard Time',
     }
+    if errorMessage:
+        result['errorMessage'] = errorMessage
+    return result

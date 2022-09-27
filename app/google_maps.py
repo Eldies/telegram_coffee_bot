@@ -33,6 +33,6 @@ def get_timezone_for_location(latitude: int, longitude: int) -> str:
     )
     result = response.json()
     if result['status'] not in ('OK',):
-        raise GoogleApiError(result.get('error_message', 'no error message'))
+        raise GoogleApiError(result.get('errorMessage', 'no error message'))
 
     return result['timeZoneId']
