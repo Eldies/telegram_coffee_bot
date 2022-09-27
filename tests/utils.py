@@ -102,8 +102,8 @@ class TestBot(ExtBot):
         raise AttributeError('unknown method')
 
 
-def make_city_data_response(status='OK'):
-    return {
+def make_city_data_response(status='OK', error_message=None):
+    result = {
         'results': [
             {
                 'address_components': [
@@ -126,9 +126,12 @@ def make_city_data_response(status='OK'):
         ],
         'status': status,
     }
+    if error_message:
+        result['error_message'] = error_message
+    return result
 
 
-def make_timezone_for_location_response(status='OK', tz_id='America/New_York', errorMessage=None):
+def make_timezone_for_location_response(status='OK', tz_id='America/New_York', error_message=None):
     result = {
         'dstOffset': 0,
         'rawOffset': int(datetime.now(pytz.timezone(tz_id)).utcoffset().total_seconds()),
@@ -136,6 +139,6 @@ def make_timezone_for_location_response(status='OK', tz_id='America/New_York', e
         'timeZoneId': tz_id,
         'timeZoneName': 'Eastern Standard Time',
     }
-    if errorMessage:
-        result['errorMessage'] = errorMessage
+    if error_message:
+        result['errorMessage'] = error_message
     return result

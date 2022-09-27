@@ -6,6 +6,7 @@ from .exceptions import GoogleApiError
 
 
 def get_city_data(city: str) -> dict:
+    # https://developers.google.com/maps/documentation/geocoding/requests-geocoding?hl=en_US
     response = requests.get(
         url='https://maps.googleapis.com/maps/api/geocode/json',
         params=dict(

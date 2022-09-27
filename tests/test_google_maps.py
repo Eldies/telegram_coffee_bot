@@ -45,8 +45,9 @@ class TestCityData:
         make_city_data_response(status='UNKNOWN_ERROR'),
     ], indirect=['get'])
     def test_not_ok_status(self, get):
-        with pytest.raises(GoogleApiError):
+        with pytest.raises(GoogleApiError) as excinfo:
             get_city_data('text')
+        assert str(excinfo.value) == 'no error message'
         assert get.call_count == 1
         assert get.call_args.kwargs == dict(
             params=dict(
@@ -56,6 +57,14 @@ class TestCityData:
             ),
             url='https://maps.googleapis.com/maps/api/geocode/json',
         )
+
+    @pytest.mark.parametrize('get', [
+        make_city_data_response(status='INVALID_REQUEST', error_message='custom error message'),
+    ], indirect=['get'])
+    def test_not_ok_status_with_error_message(self, get):
+        with pytest.raises(GoogleApiError) as excinfo:
+            get_city_data('text')
+        assert str(excinfo.value) == 'custom error message'
 
 
 class TestTimezoneForLocation:
@@ -103,7 +112,7 @@ class TestTimezoneForLocation:
         )
 
     @pytest.mark.parametrize('get', [
-        make_timezone_for_location_response(status='INVALID_REQUEST', errorMessage='custom error message'),
+        make_timezone_for_location_response(status='INVALID_REQUEST', error_message='custom error message'),
     ], indirect=['get'])
     def test_not_ok_status_with_error_message(self, get):
         with pytest.raises(GoogleApiError) as excinfo:
